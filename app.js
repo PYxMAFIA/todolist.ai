@@ -13,9 +13,9 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public")); 
 
-mongoose.connect("mongodb+srv://admin-Piyus:Test123@cluster0.pllntec.mongodb.net/todolistDB");
+mongoose.connect("mongodb+srv://admin-Piyus:Test123@cluster0.pllntec.mongodb.net/todolistDB?retryWrites=true&w=majority&appName=Cluster0");
 
-//create a schema for the items
+//create a schema for the items 
 const itemsSchema = {
   name: String
 };
@@ -115,26 +115,27 @@ app.get("/:customListName", function (req, res) {
     });
 });
 
-app.post("/delete", function(req, res){
+app.post("/delete", function(req, res) {
   const checkedItemId = req.body.checkbox;
   const listName = req.body.listName;
 
   if (listName === "Today") {
-    Item.findByIdAndRemove(checkedItemId, function(err){
-      if (!err) {
+    Item.findByIdAndDelete(checkedItemId)
+      .then(() => {
         console.log("Successfully deleted checked item.");
         res.redirect("/");
-      }
-    });
+      })
+      .catch(err => console.error(err));
   } else {
-    List.findOneAndUpdate({name: listName}, {$pull: {items: {_id: checkedItemId}}}, function(err, foundList){
-      if (!err){
+    List.findOneAndUpdate(
+      { name: listName },
+      { $pull: { items: { _id: checkedItemId } } }
+    )
+      .then(() => {
         res.redirect("/" + listName);
-      }
-    });
+      })
+      .catch(err => console.error(err));
   }
-
-
 });
 
 
@@ -145,6 +146,6 @@ app.get("/about", function (req, res) {
 });
 
 
-app.listen(3000, function () {
-  console.log("Server is running on port 3000");
+app.listen(5000, function () {
+  console.log("Server is running on port 5000");
 });
