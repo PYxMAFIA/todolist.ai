@@ -3,71 +3,59 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
-const { name } = require("ejs");
-const _ = require("lodash"); // for dynamic routes
+const _ = require("lodash");
 
 const app = express();
 
-
-app.set('view engine', 'ejs');
+app.set("view engine", "ejs");
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static("public")); 
+app.use(express.static("public"));
 
 mongoose.connect("mongodb+srv://admin-Piyus:Test123@cluster0.pllntec.mongodb.net/todolistDB?retryWrites=true&w=majority&appName=Cluster0");
 
-//create a schema for the items 
-const itemsSchema = {
-  name: String
-};
-
+// Schema setup
+const itemsSchema = { name: String };
 const listSchema = {
   name: String,
   items: [itemsSchema]
 };
 
-const Item = mongoose.model("item", itemsSchema);
-const List = mongoose.model("list", listSchema);
+const Item = mongoose.model("Item", itemsSchema);
+const List = mongoose.model("List", listSchema);
 
-const item1 = new Item({
-  name: "Hello There"
-});
-const item2 = new Item({
-  name: "Welcome to my site"
-});
-const item3 = new Item({
-  name: "Created By Your One and Only Piyus"
-});
-
-const defaultItems = [item1, item2, item3];
+// ✅ Define globally to use in both / and /:customListName
+const defaultItems = [
+  { name: "Welcome to your to-do list!" },
+  { name: "Hit the ➕ button to add a new item." },
+  { name: "<--◻️ Hit this to delete an item." }
+];
 
 
-//GET function for home route
+
+// Home route
 app.get("/", function (req, res) {
-  Item.find()
-    .then(items => {
-      if (items.length === 0) {
-        Item.insertMany(defaultItems).then(result => { console.log("Successfully") })
-          .catch(err => { console.log(err) });
-        res.redirect("/");
+  Item.find({})
+    .then(function (foundItems) {
+      if (foundItems.length === 0) {
+        return Item.insertMany(defaultItems).then(() => {
+          console.log("Inserted default items");
+          res.redirect("/");
+        });
       } else {
-        res.render("list", { listTitle: "Today", newListItems: items });
+        res.render("list", { listTitle: "Today", newListItems: foundItems });
       }
     })
-    .catch(err => {
-      console.log(err); // error
+    .catch(function (err) {
+      console.log("Error fetching or inserting items:", err);
     });
-
-
 });
-//POST function for home route
+
+// Add item
 app.post("/", function (req, res) {
-  // console.log(req.body);
   const itemContent = req.body.newItem;
   const listName = req.body.list;
 
-  const item = new Item({
-    name: itemContent
-  });
+  const item = new Item({ name: itemContent });
 
   if (listName === "Today") {
     item.save();
@@ -75,25 +63,29 @@ app.post("/", function (req, res) {
   } else {
     List.findOne({ name: listName })
       .then(foundList => {
-        {
-          foundList.items.push(item);
-          foundList.save();
-          res.redirect("/" + listName);
-        }
+        foundList.items.push(item);
+        foundList.save();
+        res.redirect("/" + listName);
       })
-      .catch(err => {
-      console.log(err); // error
-    });
+      .catch(err => console.log(err));
   }
-
 });
 
+
+// ✅ About route must come BEFORE dynamic route
+app.get("/about", function (req, res) {
+  console.log("About page accessed");
+  res.render("about");
+});
+
+
+// ✅ Dynamic custom list route
 app.get("/:customListName", function (req, res) {
   const customListName = _.capitalize(req.params.customListName);
+
   List.findOne({ name: customListName })
     .then(foundList => {
       if (!foundList) {
-        console.log("created a New site");
         const list = new List({
           name: customListName,
           items: defaultItems
@@ -115,7 +107,8 @@ app.get("/:customListName", function (req, res) {
     });
 });
 
-app.post("/delete", function(req, res) {
+// Delete item
+app.post("/delete", function (req, res) {
   const checkedItemId = req.body.checkbox;
   const listName = req.body.listName;
 
@@ -138,14 +131,7 @@ app.post("/delete", function(req, res) {
   }
 });
 
-
-//GET function for About route
-
-app.get("/about", function (req, res) {
-  res.render("about");
-});
-
-
-app.listen(5000, function () {
-  console.log("Server is running on port 5000");
+// Start server
+app.listen(process.env.PORT || 5000, () => {
+  console.log("Server is running...");
 });
