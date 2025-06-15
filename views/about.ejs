@@ -1,38 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="box" id="heading">
+        <h1>About</h1>
+        <a href="/" class="back-btn">Back to List</a>
+    </div>
 
-<%- include("header") -%>
+    <div class="box about-box">
+        <h2>Welcome to Your Todo List App!</h2>
+        <p>This is a simple yet powerful todo list application that helps you stay organized and productive.</p>
+        
+        <div class="features">
+            <h3>Features:</h3>
+            <ul>
+                <li>✨ Create and manage multiple todo lists</li>
+                <li>🔒 Secure user authentication</li>
+                <li>✅ Mark tasks as complete</li>
+                <li>🗑️ Delete completed tasks</li>
+                <li>📱 Responsive design for all devices</li>
+            </ul>
+        </div>
 
-<h2> This is the about page.</h2>
+        <div class="how-to-use">
+            <h3>How to Use:</h3>
+            <ol>
+                <li>Register or login to your account</li>
+                <li>Add new items using the input field</li>
+                <li>Check the checkbox to mark items as complete</li>
+                <li>Create custom lists by adding /listname to the URL</li>
+            </ol>
+        </div>
+    </div>
 
-<p>
-  Aspiring entrepreneur with a
-passion for innovation and
-creativity, I'm Piyus, a tech
-enthusiast eager to make a mark
-in the digital space. Currently
-pursuing a vibrant college
-journey, I'm committed to
-stepping out of my comfort zone
-and embracing new challenges.
-With interests ranging from sports
-and adventure to anime and web
-series, I blend creativity with a
-keen sense for technology. I'm
-particularly excited about
-developing a unique app that
-brings manga to life through
-audio narration, merging my love
-for storytelling and tech. My goal
-is to create impactful digital
-solutions while maintaining a
-balanced, fulfilling life. Driven by a
-desire to contribute positively to
-society, I also dedicate time to
-charity work, supporting
-underprivileged communities.
-Connect with me to share ideas,
-collaborate on exciting projects,
-or discuss opportunities in the
-tech and entrepreneurial world!
-</p>
-
-<%- include("footer") -%>
+    <footer>
+        <p>Copyright © <%= new Date().getFullYear() %> Todo List App</p>
+    </footer>
+</body>
+</html>

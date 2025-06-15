@@ -1,30 +1,39 @@
-<%- include("header") -%>
-<div class="box" id="heading">
-  <h1><%=listTitle %></h1>
-</div>
-
-<div class="box">
-  <% newListItems.forEach(function (items) { %>
-  <form action="/delete" method="post">
-    <div class="item">
-      <input type="checkbox" onChange="this.form.submit()" name="checkbox" value="<%= items._id %>"/>
-      <p><%= items.name%></p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= listTitle %></title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="box" id="heading">
+        <h1><%= listTitle %></h1>
+        <div class="header-buttons">
+            <a href="/about" class="about-btn">About</a>
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
     </div>
-    <input type="hidden" name="listName" value="<%= listTitle %>"></input>
-  </form>
 
-  <% }); %>
-  <form class="item" action="/" method="post">
-    <input
-      type="text"
-      name="newItem"
-      placeholder="New Item"
-      autocomplete="off"
-      autofocus="true"
-    />
-    <button type="submit" name="list" value="<%= listTitle%>">+</button>
-  </form>
-</div>
+    <div class="box">
+        <% newListItems.forEach(function(item) { %>
+            <form action="/delete" method="POST">
+                <div class="item">
+                    <input type="checkbox" onChange="this.form.submit()" name="checkbox" value="<%= item._id %>"/>
+                    <p><%= item.name %></p>
+                </div>
+                <input type="hidden" name="listName" value="<%= listTitle %>">
+            </form>
+        <% }); %>
 
-<%# This tag comes from EJS Template%> <%# https://ejs.co/#docs%> <%# look at
-the Tags section%> <%- include("footer") -%>
+        <form class="item" action="/" method="POST">
+            <input type="text" name="newItem" placeholder="New Item" autocomplete="off" autofocus="true"/>
+            <button type="submit" name="list" value="<%= listTitle %>">+</button>
+        </form>
+    </div>
+
+    <footer>
+        <p>Copyright © <%= new Date().getFullYear() %> Todo List App</p>
+    </footer>
+</body>
+</html>
