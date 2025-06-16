@@ -10,6 +10,7 @@ const passport = require("passport");
 const passportLocalMongoose = require("passport-local-mongoose");
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const findOrCreate = require('mongoose-findorcreate');
+const MongoStore = require('connect-mongo');
 
 const app = express();
 
@@ -19,15 +20,18 @@ app.use(express.static("public"));
 
 // Session setup
 app.use(session({
-  secret: "Our little secret.",
+  secret: process.env.SESSION_SECRET || "Our little secret.",
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI || "mongodb+srv://admin-Piyus:Test123@cluster0.pllntec.mongodb.net/todolistDB?retryWrites=true&w=majority&appName=Cluster0"
+  })
 }));
 
 app.use(passport.initialize());
 app.use(passport.session());
 
-mongoose.connect("mongodb+srv://admin-Piyus:Test123@cluster0.pllntec.mongodb.net/todolistDB?retryWrites=true&w=majority&appName=Cluster0");
+mongoose.connect(process.env.MONGODB_URI || "mongodb+srv://admin-Piyus:Test123@cluster0.pllntec.mongodb.net/todolistDB?retryWrites=true&w=majority&appName=Cluster0");
 
 // Schema setup
 const userSchema = new mongoose.Schema({
@@ -75,21 +79,22 @@ passport.deserializeUser(function(id, done) {
   });
 });
 
-console.log("Using redirect URI:", process.env.GOOGLE_CALLBACK_URL);
+const isProduction = process.env.NODE_ENV === 'production';
+const callbackURL = isProduction 
+  ? "https://todolist-ai.onrender.com/auth/google/callback"
+  : "http://localhost:5000/auth/google/callback";
 
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: process.env.GOOGLE_CALLBACK_URL,
+    callbackURL: callbackURL,
     userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
   },
   async function(accessToken, refreshToken, profile, cb) {
     try {
-      // Check if user already exists
       let user = await User.findOne({ googleId: profile.id });
       
       if (!user) {
-        // Create new user if doesn't exist
         const email = profile.emails && profile.emails[0] ? profile.emails[0].value : `${profile.id}@google.com`;
         user = await User.create({
           googleId: profile.id,
@@ -283,13 +288,28 @@ app.get("/auth/google",
 );
 
 app.get("/auth/google/callback", 
-  passport.authenticate("google", { failureRedirect: "/login" }),
+  passport.authenticate("google", { 
+    failureRedirect: "/login",
+    failureMessage: true 
+  }),
   function(req, res) {
-    res.redirect("/");
+    try {
+      res.redirect("/");
+    } catch (err) {
+      console.error("Callback error:", err);
+      res.redirect("/login");
+    }
   }
 );
 
+// Add this before the app.listen() call
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).send('Something broke!');
+});
+
 // Start server
-app.listen(process.env.PORT || 5000, () => {
-  console.log("Server is running...");
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}...`);
 });
